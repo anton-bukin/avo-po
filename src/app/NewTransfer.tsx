@@ -21,6 +21,7 @@ interface Country {
 
 interface RatesData {
   rates: Record<string, number>;
+  commissions?: Record<number, { rate: number; min: number }>;
   commissionRate: number;
   minCommission: number;
 }
@@ -141,17 +142,25 @@ export default function NewTransfer() {
     return () => { if (pollInterval) clearInterval(pollInterval); };
   }, [pollInterval]);
 
+  // Get per-direction commission or fall back to defaults
+  const dirCommission = useMemo(() => {
+    if (!ratesData || !selectedDir) return { rate: 0.015, min: 50 };
+    const c = ratesData.commissions?.[selectedDir.id];
+    if (c) return { rate: c.rate / 100, min: c.min };
+    return { rate: ratesData.commissionRate || 0.015, min: ratesData.minCommission || 50 };
+  }, [ratesData, selectedDir]);
+
   const calcPreview = useMemo(() => {
     if (!ratesData || !selectedDir || !amountSend) return null;
     const amount = parseFloat(amountSend);
     if (!amount || amount <= 0) return null;
     const rate = ratesData.rates[selectedDir.currency_to];
     if (!rate) return null;
-    const commission = Math.max(amount * ratesData.commissionRate, ratesData.minCommission);
+    const commission = Math.max(amount * dirCommission.rate, dirCommission.min);
     const amountReceive = Math.round(amount * rate * 100) / 100;
     const totalDebit = Math.round((amount + commission) * 100) / 100;
-    return { rate, commission: Math.round(commission * 100) / 100, amountReceive, totalDebit };
-  }, [ratesData, selectedDir, amountSend]);
+    return { rate, commission: Math.round(commission * 100) / 100, amountReceive, totalDebit, commissionRate: dirCommission.rate * 100, minCommission: dirCommission.min };
+  }, [ratesData, selectedDir, amountSend, dirCommission]);
 
   const createAndCalculate = async () => {
     if (!selectedDir) return;
@@ -261,7 +270,7 @@ export default function NewTransfer() {
                       <span className="amount-row-currency">{selectedDir.currency_to}</span>
                     </div>
                     <div className="amount-fee-line">
-                      <span>Комиссия (1.5%, мин. 50 {selectedDir.currency_from})</span>
+                      <span>Комиссия ({calcPreview.commissionRate}%, мин. {calcPreview.minCommission} {selectedDir.currency_from})</span>
                       <span className="amount-fee-value">{calcPreview.commission.toLocaleString('ru-RU')} {selectedDir.currency_from}</span>
                     </div>
                     <div className="amount-fee-line">
@@ -273,7 +282,7 @@ export default function NewTransfer() {
               </div>
 
               <div style={{ fontSize: '0.72rem', color: '#a0aec0', textAlign: 'center', margin: '0.5rem 0' }}>
-                Комиссия за перевод: 1.5% от суммы (минимум 50 {selectedDir.currency_from})
+                Комиссия за перевод: {dirCommission.rate * 100}% от суммы (минимум {dirCommission.min} {selectedDir.currency_from})
               </div>
             </>
           )}
@@ -410,7 +419,7 @@ export default function NewTransfer() {
                 <span className="review-row-value">1 {transfer.currencyFrom} = {transfer.exchangeRate} {transfer.currencyTo}</span>
               </div>
               <div className="review-row">
-                <span className="review-row-label">Комиссия (1.5%)</span>
+                <span className="review-row-label">Комиссия ({dirCommission.rate * 100}%)</span>
                 <span className="review-row-value">{transfer.commission?.toLocaleString('ru-RU')} {transfer.currencyFrom}</span>
               </div>
               <div className="review-row" style={{ fontWeight: 600 }}>

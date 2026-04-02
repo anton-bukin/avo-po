@@ -215,9 +215,11 @@ router.get('/directions', authMiddleware, async (req: AuthRequest, res: Response
       currencyFrom: d.currency_from,
       currencyTo: d.currency_to,
       marginPercent: margin,
+      commissionPercent: parseFloat(d.commission_percent) ?? 1.5,
+      minCommission: parseFloat(d.min_commission) ?? 50,
       isActive: d.is_active,
-      cbrRate: cbrRate ? (1 / cbrRate.value) : null, // 1 RUB = X foreign, no margin
-      effectiveRate: effectiveRate, // with margin applied
+      cbrRate: cbrRate ? (1 / cbrRate.value) : null,
+      effectiveRate: effectiveRate,
       cbrRateName: cbrRate?.name || null,
     };
   }));
@@ -230,7 +232,7 @@ router.patch('/directions/:id', authMiddleware, async (req: AuthRequest, res: Re
   if (!requireAdmin(req, res)) return;
 
   const { id } = req.params;
-  const { marginPercent, isActive } = req.body;
+  const { marginPercent, commissionPercent, minCommission, isActive } = req.body;
 
   const updates: string[] = [];
   const params: any[] = [];
@@ -244,6 +246,26 @@ router.patch('/directions/:id', authMiddleware, async (req: AuthRequest, res: Re
     }
     updates.push(`margin_percent = $${idx++}`);
     params.push(margin);
+  }
+
+  if (commissionPercent !== undefined) {
+    const cp = parseFloat(commissionPercent);
+    if (isNaN(cp) || cp < 0 || cp > 30) {
+      res.status(400).json({ error: 'Комиссия должна быть от 0% до 30%' });
+      return;
+    }
+    updates.push(`commission_percent = $${idx++}`);
+    params.push(cp);
+  }
+
+  if (minCommission !== undefined) {
+    const mc = parseFloat(minCommission);
+    if (isNaN(mc) || mc < 0) {
+      res.status(400).json({ error: 'Мин. комиссия не может быть отрицательной' });
+      return;
+    }
+    updates.push(`min_commission = $${idx++}`);
+    params.push(mc);
   }
 
   if (isActive !== undefined) {

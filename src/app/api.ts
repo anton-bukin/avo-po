@@ -61,6 +61,6 @@ export const api = {
     return `/avo-po/api/v1/admin/transfers/export?${q.toString()}`;
   },
   adminGetDirections: () => request('/admin/directions'),
-  adminUpdateDirection: (id: number, data: { marginPercent?: number; isActive?: boolean }) =>
+  adminUpdateDirection: (id: number, data: { marginPercent?: number; commissionPercent?: number; minCommission?: number; isActive?: boolean }) =>
     request(`/admin/directions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 };

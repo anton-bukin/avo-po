@@ -158,10 +158,6 @@ export default function TransferDetail() {
             </div>
           )}
           <div className="info-row">
-            <span className="info-row-label">Комиссия</span>
-            <span className="info-row-value" style={{ fontSize: '0.72rem', color: '#a0aec0' }}>1.5% от суммы (мин. 50 RUB)</span>
-          </div>
-          <div className="info-row">
             <span className="info-row-label">ID</span>
             <span className="info-row-value" style={{ fontSize: '0.72rem', color: '#a0aec0' }}>{transfer.id}</span>
           </div>

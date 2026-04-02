@@ -29,24 +29,33 @@ router.get('/payment-methods', authMiddleware, async (_req: AuthRequest, res: Re
   res.json(rows);
 });
 
-// GET /api/v1/rates — exchange rates from CBR with margins applied
+// GET /api/v1/rates — exchange rates from CBR with margins + per-direction commissions
 router.get('/rates', authMiddleware, async (_req: AuthRequest, res: Response) => {
   try {
-    const { rows: dirs } = await pool.query('SELECT currency_to, margin_percent FROM directions WHERE is_active = true');
+    const { rows: dirs } = await pool.query(
+      'SELECT id, currency_to, margin_percent, commission_percent, min_commission FROM directions WHERE is_active = true'
+    );
 
     const rates: Record<string, number> = {};
+    const commissions: Record<number, { rate: number; min: number }> = {};
+
     for (const dir of dirs) {
       const currency = dir.currency_to;
-      if (rates[currency]) continue; // already fetched
       const margin = parseFloat(dir.margin_percent) || 0;
-      const rate = await getRubToForeignRate(currency, margin);
-      if (rate !== null) {
-        rates[currency] = rate;
+      if (!rates[currency]) {
+        const rate = await getRubToForeignRate(currency, margin);
+        if (rate !== null) rates[currency] = rate;
       }
+      commissions[dir.id] = {
+        rate: parseFloat(dir.commission_percent) ?? 1.5,
+        min: parseFloat(dir.min_commission) ?? 50,
+      };
     }
 
     res.json({
       rates,
+      commissions,
+      // defaults for backward compat
       commissionRate: 0.015,
       minCommission: 50,
       cbrDate: getCacheDate(),

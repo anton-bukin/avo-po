@@ -28,6 +28,8 @@ export async function initDB() {
       currency_from VARCHAR(3) NOT NULL,
       currency_to VARCHAR(3) NOT NULL,
       margin_percent NUMERIC(5,2) DEFAULT 0,
+      commission_percent NUMERIC(5,2) DEFAULT 1.5,
+      min_commission NUMERIC(10,2) DEFAULT 50,
       is_active BOOLEAN DEFAULT true
     );
 
@@ -84,10 +86,10 @@ export async function initDB() {
     );
   `);
 
-  // Migration: add margin_percent if missing
-  await pool.query(`
-    ALTER TABLE directions ADD COLUMN IF NOT EXISTS margin_percent NUMERIC(5,2) DEFAULT 0
-  `).catch(() => {});
+  // Migrations
+  await pool.query(`ALTER TABLE directions ADD COLUMN IF NOT EXISTS margin_percent NUMERIC(5,2) DEFAULT 0`).catch(() => {});
+  await pool.query(`ALTER TABLE directions ADD COLUMN IF NOT EXISTS commission_percent NUMERIC(5,2) DEFAULT 1.5`).catch(() => {});
+  await pool.query(`ALTER TABLE directions ADD COLUMN IF NOT EXISTS min_commission NUMERIC(10,2) DEFAULT 50`).catch(() => {});
 
   // Seed reference data if empty
   const { rows } = await pool.query('SELECT count(*) as c FROM countries');

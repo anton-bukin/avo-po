@@ -6,11 +6,8 @@ import { getRubToForeignRate } from '../cbr.js';
 
 const router = Router();
 
-const COMMISSION_RATE = 0.015; // 1.5%
-const MIN_COMMISSION = 50; // 50 RUB
-
-function calcCommission(amount: number): number {
-  return Math.max(amount * COMMISSION_RATE, MIN_COMMISSION);
+function calcCommission(amount: number, rate: number = 0.015, min: number = 50): number {
+  return Math.max(amount * rate, min);
 }
 
 // POST /api/v1/transfers — create transfer
@@ -67,14 +64,17 @@ router.post('/:id/calculate', authMiddleware, async (req: AuthRequest, res: Resp
       return;
     }
 
-    // Get margin from direction
-    const { rows: dirRows } = await pool.query('SELECT margin_percent FROM directions WHERE id = $1', [transfer.direction_id]);
-    const margin = dirRows.length > 0 ? parseFloat(dirRows[0].margin_percent) || 0 : 0;
+    // Get margin + commission from direction
+    const { rows: dirRows } = await pool.query('SELECT margin_percent, commission_percent, min_commission FROM directions WHERE id = $1', [transfer.direction_id]);
+    const dir = dirRows[0] || {};
+    const margin = parseFloat(dir.margin_percent) || 0;
+    const commRate = (parseFloat(dir.commission_percent) ?? 1.5) / 100;
+    const commMin = parseFloat(dir.min_commission) ?? 50;
 
     // Get real CBR rate with margin
     const cbrRate = await getRubToForeignRate(transfer.currency_to, margin);
     const rate = cbrRate || 1;
-    const commission = calcCommission(amount);
+    const commission = calcCommission(amount, commRate, commMin);
     const totalDebit = amount + commission;
     const amountReceive = Math.round(amount * rate * 100) / 100;
 
