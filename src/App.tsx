@@ -2,19 +2,14 @@ import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import Sidebar from './components/Sidebar';
-import Overview from './sections/Overview';
-import CoreEngine from './sections/CoreEngine';
-import Dependencies from './sections/Dependencies';
-import DataStorage from './sections/DataStorage';
-import Elasticsearch from './sections/Elasticsearch';
-import Redis from './sections/Redis';
-import CacheUpdater from './sections/CacheUpdater';
-import ApiGateway from './sections/ApiGateway';
-import Kubernetes from './sections/Kubernetes';
-import ClientAccess from './sections/ClientAccess';
-import Communications from './sections/Communications';
-import ObjectStorage from './sections/ObjectStorage';
-import Conclusion from './sections/Conclusion';
+import {
+  About, UserRegister, UserNewTransfer, UserAmount, UserDetails,
+  UserConfirm, UserStatus, UserHistory, UserRepeat, UserFAQ
+} from './sections/UserGuide';
+import {
+  AdminStart, AdminDashboard, AdminUsers, AdminTransfers,
+  AdminDirections, AdminExport
+} from './sections/AdminGuide';
 import PSPayApp from './app/PSPayApp';
 
 function DocsPage() {
@@ -28,27 +23,33 @@ function DocsPage() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main className="main-content">
         <div className="header">
-          <div className="header-badge">PS Pay Platform</div>
-          <h1>Платформа для Сервиса переводов с платёжных карт на платёжные карты и счета</h1>
-          <div className="header-subtitle">Описание функциональности, компонентов и зависимостей</div>
-          <div className="header-version">Версия документа: 1.2</div>
+          <div className="header-badge">PS Pay</div>
+          <h1>Руководство пользователя и администратора</h1>
+          <div className="header-subtitle">Инструкции по работе с сервисом переводов PS Pay</div>
           <Link to="/avo-po/app" style={{ display: 'inline-block', marginTop: '0.75rem', background: '#4f6ef7', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>
             Открыть приложение PS Pay &rarr;
           </Link>
         </div>
-        <Overview />
-        <CoreEngine />
-        <Dependencies />
-        <DataStorage />
-        <Elasticsearch />
-        <Redis />
-        <CacheUpdater />
-        <ApiGateway />
-        <Kubernetes />
-        <ClientAccess />
-        <Communications />
-        <ObjectStorage />
-        <Conclusion />
+
+        {/* User Guide */}
+        <About />
+        <UserRegister />
+        <UserNewTransfer />
+        <UserAmount />
+        <UserDetails />
+        <UserConfirm />
+        <UserStatus />
+        <UserHistory />
+        <UserRepeat />
+        <UserFAQ />
+
+        {/* Admin Guide */}
+        <AdminStart />
+        <AdminDashboard />
+        <AdminUsers />
+        <AdminTransfers />
+        <AdminDirections />
+        <AdminExport />
       </main>
     </div>
   );
