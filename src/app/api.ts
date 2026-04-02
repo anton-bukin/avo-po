@@ -60,4 +60,7 @@ export const api = {
     if (params?.userId) q.set('userId', params.userId);
     return `/avo-po/api/v1/admin/transfers/export?${q.toString()}`;
   },
+  adminGetDirections: () => request('/admin/directions'),
+  adminUpdateDirection: (id: number, data: { marginPercent?: number; isActive?: boolean }) =>
+    request(`/admin/directions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 };

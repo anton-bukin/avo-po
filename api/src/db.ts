@@ -27,6 +27,7 @@ export async function initDB() {
       country_to VARCHAR(3) NOT NULL,
       currency_from VARCHAR(3) NOT NULL,
       currency_to VARCHAR(3) NOT NULL,
+      margin_percent NUMERIC(5,2) DEFAULT 0,
       is_active BOOLEAN DEFAULT true
     );
 
@@ -82,6 +83,11 @@ export async function initDB() {
       error_message TEXT
     );
   `);
+
+  // Migration: add margin_percent if missing
+  await pool.query(`
+    ALTER TABLE directions ADD COLUMN IF NOT EXISTS margin_percent NUMERIC(5,2) DEFAULT 0
+  `).catch(() => {});
 
   // Seed reference data if empty
   const { rows } = await pool.query('SELECT count(*) as c FROM countries');

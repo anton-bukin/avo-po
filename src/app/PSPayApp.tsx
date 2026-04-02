@@ -8,6 +8,7 @@ import AdminLayout from './admin/AdminLayout';
 import Dashboard from './admin/Dashboard';
 import UsersPage from './admin/UsersPage';
 import TransfersPage from './admin/TransfersPage';
+import DirectionsPage from './admin/DirectionsPage';
 import './App.css';
 import './admin/admin.css';
 
@@ -29,6 +30,7 @@ export default function PSPayApp() {
         <Route index element={<Dashboard />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="transfers" element={<TransfersPage />} />
+        <Route path="directions" element={<DirectionsPage />} />
       </Route>
 
       <Route path="*" element={

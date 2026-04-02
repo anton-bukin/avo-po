@@ -2,21 +2,9 @@ import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../db.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
+import { getRubToForeignRate } from '../cbr.js';
 
 const router = Router();
-
-// Stub exchange rates (RUB -> X)
-const RATES: Record<string, number> = {
-  UZS: 140.5,
-  TJS: 0.122,
-  KGS: 0.97,
-  KZT: 5.28,
-  AZN: 0.0196,
-  GEL: 0.031,
-  TRY: 0.394,
-  CNY: 0.0835,
-  AMD: 4.45,
-};
 
 const COMMISSION_RATE = 0.015; // 1.5%
 const MIN_COMMISSION = 50; // 50 RUB
@@ -79,7 +67,13 @@ router.post('/:id/calculate', authMiddleware, async (req: AuthRequest, res: Resp
       return;
     }
 
-    const rate = RATES[transfer.currency_to] || 1;
+    // Get margin from direction
+    const { rows: dirRows } = await pool.query('SELECT margin_percent FROM directions WHERE id = $1', [transfer.direction_id]);
+    const margin = dirRows.length > 0 ? parseFloat(dirRows[0].margin_percent) || 0 : 0;
+
+    // Get real CBR rate with margin
+    const cbrRate = await getRubToForeignRate(transfer.currency_to, margin);
+    const rate = cbrRate || 1;
     const commission = calcCommission(amount);
     const totalDebit = amount + commission;
     const amountReceive = Math.round(amount * rate * 100) / 100;

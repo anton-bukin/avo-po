@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import pool from '../db.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
+import { getRubToForeignRate, getCacheDate } from '../cbr.js';
 
 const router = Router();
 
@@ -28,20 +29,32 @@ router.get('/payment-methods', authMiddleware, async (_req: AuthRequest, res: Re
   res.json(rows);
 });
 
-// GET /api/v1/rates — exchange rates and commission info for client calculator
+// GET /api/v1/rates — exchange rates from CBR with margins applied
 router.get('/rates', authMiddleware, async (_req: AuthRequest, res: Response) => {
-  const rates: Record<string, number> = {
-    UZS: 140.5,
-    TJS: 0.122,
-    KGS: 0.97,
-    KZT: 5.28,
-    AZN: 0.0196,
-    GEL: 0.031,
-    TRY: 0.394,
-    CNY: 0.0835,
-    AMD: 4.45,
-  };
-  res.json({ rates, commissionRate: 0.015, minCommission: 50 });
+  try {
+    const { rows: dirs } = await pool.query('SELECT currency_to, margin_percent FROM directions WHERE is_active = true');
+
+    const rates: Record<string, number> = {};
+    for (const dir of dirs) {
+      const currency = dir.currency_to;
+      if (rates[currency]) continue; // already fetched
+      const margin = parseFloat(dir.margin_percent) || 0;
+      const rate = await getRubToForeignRate(currency, margin);
+      if (rate !== null) {
+        rates[currency] = rate;
+      }
+    }
+
+    res.json({
+      rates,
+      commissionRate: 0.015,
+      minCommission: 50,
+      cbrDate: getCacheDate(),
+    });
+  } catch (err) {
+    console.error('Rates error:', err);
+    res.status(500).json({ error: 'Ошибка получения курсов' });
+  }
 });
 
 export default router;

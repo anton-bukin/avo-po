@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import pool from '../db.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
+import { getAllCBRRates, getRubToForeignRate } from '../cbr.js';
 
 const router = Router();
 
@@ -183,6 +184,82 @@ router.get('/stats', authMiddleware, async (req: AuthRequest, res: Response) => 
     transfersByStatus: byStatus,
     totalVolume: parseFloat(volumeRes.rows[0].total),
   });
+});
+
+// GET /api/v1/admin/directions — all directions with CBR rates and margins
+router.get('/directions', authMiddleware, async (req: AuthRequest, res: Response) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { rows } = await pool.query(`
+    SELECT d.*, c.name as country_to_name, c.flag as country_to_flag
+    FROM directions d
+    LEFT JOIN countries c ON d.country_to = c.code
+    ORDER BY d.id
+  `);
+
+  const { rates: cbrRates, date: cbrDate } = await getAllCBRRates();
+
+  const result = await Promise.all(rows.map(async (d: any) => {
+    const cbrRate = cbrRates[d.currency_to];
+    const margin = parseFloat(d.margin_percent) || 0;
+    const effectiveRate = await getRubToForeignRate(d.currency_to, margin);
+
+    return {
+      id: d.id,
+      code: d.code,
+      name: d.name,
+      countryFrom: d.country_from,
+      countryTo: d.country_to,
+      countryToName: d.country_to_name,
+      countryToFlag: d.country_to_flag,
+      currencyFrom: d.currency_from,
+      currencyTo: d.currency_to,
+      marginPercent: margin,
+      isActive: d.is_active,
+      cbrRate: cbrRate ? (1 / cbrRate.value) : null, // 1 RUB = X foreign, no margin
+      effectiveRate: effectiveRate, // with margin applied
+      cbrRateName: cbrRate?.name || null,
+    };
+  }));
+
+  res.json({ directions: result, cbrDate });
+});
+
+// PATCH /api/v1/admin/directions/:id — update margin or active status
+router.patch('/directions/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { id } = req.params;
+  const { marginPercent, isActive } = req.body;
+
+  const updates: string[] = [];
+  const params: any[] = [];
+  let idx = 1;
+
+  if (marginPercent !== undefined) {
+    const margin = parseFloat(marginPercent);
+    if (isNaN(margin) || margin < -50 || margin > 50) {
+      res.status(400).json({ error: 'Маржа должна быть от -50% до 50%' });
+      return;
+    }
+    updates.push(`margin_percent = $${idx++}`);
+    params.push(margin);
+  }
+
+  if (isActive !== undefined) {
+    updates.push(`is_active = $${idx++}`);
+    params.push(!!isActive);
+  }
+
+  if (updates.length === 0) {
+    res.status(400).json({ error: 'Нет данных для обновления' });
+    return;
+  }
+
+  params.push(parseInt(id));
+  await pool.query(`UPDATE directions SET ${updates.join(', ')} WHERE id = $${idx}`, params);
+
+  res.json({ ok: true });
 });
 
 export default router;

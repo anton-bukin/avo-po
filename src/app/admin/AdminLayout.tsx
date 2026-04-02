@@ -23,6 +23,9 @@ export default function AdminLayout() {
             <NavLink to="/avo-po/app/admin/transfers" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
               Операции
             </NavLink>
+            <NavLink to="/avo-po/app/admin/directions" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
+              Направления
+            </NavLink>
           </nav>
         </div>
         <div className="admin-header-right">
