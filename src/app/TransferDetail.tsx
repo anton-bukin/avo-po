@@ -158,11 +158,34 @@ export default function TransferDetail() {
             </div>
           )}
           <div className="info-row">
+            <span className="info-row-label">Комиссия</span>
+            <span className="info-row-value" style={{ fontSize: '0.72rem', color: '#a0aec0' }}>1.5% от суммы (мин. 50 RUB)</span>
+          </div>
+          <div className="info-row">
             <span className="info-row-label">ID</span>
             <span className="info-row-value" style={{ fontSize: '0.72rem', color: '#a0aec0' }}>{transfer.id}</span>
           </div>
         </div>
       </div>
+
+      {/* Repeat transfer button */}
+      <button
+        className="btn btn-outline"
+        style={{ width: '100%' }}
+        onClick={() => {
+          const params = new URLSearchParams();
+          if (transfer.directionId) params.set('directionId', String(transfer.directionId));
+          if (transfer.amountSend) params.set('amount', String(transfer.amountSend));
+          if (transfer.senderCard) params.set('senderCard', transfer.senderCard);
+          if (transfer.senderName) params.set('senderName', transfer.senderName);
+          if (transfer.receiverCard) params.set('receiverCard', transfer.receiverCard);
+          if (transfer.receiverName) params.set('receiverName', transfer.receiverName);
+          if (transfer.receiverPhone) params.set('receiverPhone', transfer.receiverPhone);
+          navigate(`/avo-po/app/new?${params.toString()}`);
+        }}
+      >
+        Повторить перевод
+      </button>
     </div>
   );
 }

@@ -1,13 +1,22 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from './api';
 
 interface Direction {
   id: number;
   code: string;
   name: string;
+  country_from: string;
+  country_to: string;
   currency_from: string;
   currency_to: string;
+}
+
+interface Country {
+  code: string;
+  name: string;
+  currency: string;
+  flag: string;
 }
 
 interface RatesData {
@@ -73,12 +82,15 @@ function Stepper({ step }: { step: Step }) {
 
 export default function NewTransfer() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState<Step>('amount');
   const [directions, setDirections] = useState<Direction[]>([]);
+  const [countries, setCountries] = useState<Record<string, Country>>({});
   const [selectedDir, setSelectedDir] = useState<Direction | null>(null);
   const [ratesData, setRatesData] = useState<RatesData | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
 
   const [senderCard, setSenderCard] = useState('');
   const [senderName, setSenderName] = useState('');
@@ -90,10 +102,40 @@ export default function NewTransfer() {
   const [transfer, setTransfer] = useState<any>(null);
   const [pollInterval, setPollInterval] = useState<any>(null);
 
+  // Load directions, countries, rates
   useEffect(() => {
     api.getDirections().then(setDirections).catch(() => {});
     api.getRates().then(setRatesData).catch(() => {});
+    api.getCountries().then((list: Country[]) => {
+      const map: Record<string, Country> = {};
+      list.forEach(c => { map[c.code] = c; });
+      setCountries(map);
+    }).catch(() => {});
   }, []);
+
+  // Prefill from URL params (repeat transfer)
+  useEffect(() => {
+    if (prefilled || directions.length === 0) return;
+    const dirId = searchParams.get('directionId');
+    const amt = searchParams.get('amount');
+    const sc = searchParams.get('senderCard');
+    const sn = searchParams.get('senderName');
+    const rc = searchParams.get('receiverCard');
+    const rn = searchParams.get('receiverName');
+    const rp = searchParams.get('receiverPhone');
+
+    if (dirId) {
+      const dir = directions.find(d => d.id === parseInt(dirId));
+      if (dir) setSelectedDir(dir);
+    }
+    if (amt) setAmountSend(amt);
+    if (sc) setSenderCard(formatCardNumber(sc));
+    if (sn) setSenderName(sn);
+    if (rc) setReceiverCard(formatCardNumber(rc));
+    if (rn) setReceiverName(rn);
+    if (rp && rp.length > 2) setReceiverPhone(formatPhone(rp));
+    setPrefilled(true);
+  }, [directions, searchParams, prefilled]);
 
   useEffect(() => {
     return () => { if (pollInterval) clearInterval(pollInterval); };
@@ -162,6 +204,12 @@ export default function NewTransfer() {
     setReceiverPhone(formatPhone(e.target.value));
   };
 
+  // Get country name for a direction
+  const getCountryLabel = (dir: Direction) => {
+    const c = countries[dir.country_to];
+    return c ? `${c.flag} ${c.name}` : dir.name;
+  };
+
   return (
     <div>
       {step !== 'done' && <Stepper step={step} />}
@@ -171,7 +219,7 @@ export default function NewTransfer() {
       {step === 'amount' && (
         <div className="step-content">
           <div className="pspay-card">
-            <h2>Направление перевода</h2>
+            <h2>Куда отправить перевод?</h2>
             <div className="direction-chips">
               {directions.map(dir => (
                 <button
@@ -179,49 +227,55 @@ export default function NewTransfer() {
                   className={`direction-chip ${selectedDir?.id === dir.id ? 'direction-chip--selected' : ''}`}
                   onClick={() => setSelectedDir(dir)}
                 >
-                  {dir.currency_from} &rarr; {dir.currency_to}
+                  {countries[dir.country_to]?.flag || ''} {countries[dir.country_to]?.name || dir.currency_to}
                 </button>
               ))}
             </div>
           </div>
 
           {selectedDir && (
-            <div className="amount-hero">
-              <div className="amount-row">
-                <span className="amount-row-label">Вы отправляете</span>
-                <input
-                  className="amount-row-input"
-                  type="number"
-                  value={amountSend}
-                  onChange={e => setAmountSend(e.target.value)}
-                  placeholder="0"
-                  min="100"
-                />
-                <span className="amount-row-currency">{selectedDir.currency_from}</span>
+            <>
+              <div className="amount-hero">
+                <div className="amount-row">
+                  <span className="amount-row-label">Вы отправляете</span>
+                  <input
+                    className="amount-row-input"
+                    type="number"
+                    value={amountSend}
+                    onChange={e => setAmountSend(e.target.value)}
+                    placeholder="0"
+                    min="100"
+                  />
+                  <span className="amount-row-currency">{selectedDir.currency_from}</span>
+                </div>
+
+                {calcPreview && (
+                  <>
+                    <div className="amount-divider">
+                      <span>Курс:</span>
+                      <span className="amount-divider-rate">1 {selectedDir.currency_from} = {calcPreview.rate} {selectedDir.currency_to}</span>
+                    </div>
+                    <div className="amount-receive">
+                      <span className="amount-row-label">Получит в {countries[selectedDir.country_to]?.name || selectedDir.currency_to}</span>
+                      <span className="amount-receive-value">{calcPreview.amountReceive.toLocaleString('ru-RU')}</span>
+                      <span className="amount-row-currency">{selectedDir.currency_to}</span>
+                    </div>
+                    <div className="amount-fee-line">
+                      <span>Комиссия (1.5%, мин. 50 {selectedDir.currency_from})</span>
+                      <span className="amount-fee-value">{calcPreview.commission.toLocaleString('ru-RU')} {selectedDir.currency_from}</span>
+                    </div>
+                    <div className="amount-fee-line">
+                      <span>Итого к списанию</span>
+                      <span className="amount-fee-value">{calcPreview.totalDebit.toLocaleString('ru-RU')} {selectedDir.currency_from}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
-              {calcPreview && (
-                <>
-                  <div className="amount-divider">
-                    <span>Курс:</span>
-                    <span className="amount-divider-rate">1 {selectedDir.currency_from} = {calcPreview.rate} {selectedDir.currency_to}</span>
-                  </div>
-                  <div className="amount-receive">
-                    <span className="amount-row-label">Получатель получит</span>
-                    <span className="amount-receive-value">{calcPreview.amountReceive.toLocaleString('ru-RU')}</span>
-                    <span className="amount-row-currency">{selectedDir.currency_to}</span>
-                  </div>
-                  <div className="amount-fee-line">
-                    <span>Комиссия</span>
-                    <span className="amount-fee-value">{calcPreview.commission.toLocaleString('ru-RU')} {selectedDir.currency_from}</span>
-                  </div>
-                  <div className="amount-fee-line">
-                    <span>Итого к списанию</span>
-                    <span className="amount-fee-value">{calcPreview.totalDebit.toLocaleString('ru-RU')} {selectedDir.currency_from}</span>
-                  </div>
-                </>
-              )}
-            </div>
+              <div style={{ fontSize: '0.72rem', color: '#a0aec0', textAlign: 'center', margin: '0.5rem 0' }}>
+                Комиссия за перевод: 1.5% от суммы (минимум 50 {selectedDir.currency_from})
+              </div>
+            </>
           )}
 
           <button
@@ -238,7 +292,7 @@ export default function NewTransfer() {
       {step === 'sender' && selectedDir && (
         <div className="step-content">
           <div className="summary-bar">
-            <span className="summary-bar-direction">{selectedDir.name}</span>
+            <span className="summary-bar-direction">{getCountryLabel(selectedDir)}</span>
             <span className="summary-bar-amount">{parseFloat(amountSend).toLocaleString('ru-RU')} {selectedDir.currency_from}</span>
           </div>
 
@@ -273,7 +327,7 @@ export default function NewTransfer() {
       {step === 'receiver' && selectedDir && (
         <div className="step-content">
           <div className="summary-bar">
-            <span className="summary-bar-direction">{selectedDir.name}</span>
+            <span className="summary-bar-direction">{getCountryLabel(selectedDir)}</span>
             <span className="summary-bar-amount">{parseFloat(amountSend).toLocaleString('ru-RU')} {selectedDir.currency_from}</span>
           </div>
 
@@ -313,13 +367,16 @@ export default function NewTransfer() {
       )}
 
       {/* === Step 4: Review (receipt) === */}
-      {step === 'review' && transfer && (
+      {step === 'review' && transfer && selectedDir && (
         <div className="step-content">
           <div className="pspay-card">
             <div className="review-hero">
               <div className="review-hero-amount">{transfer.amountSend?.toLocaleString('ru-RU')} {transfer.currencyFrom}</div>
               <div className="review-hero-arrow">&darr;</div>
               <div className="review-hero-receive">{transfer.amountReceive?.toLocaleString('ru-RU')} {transfer.currencyTo}</div>
+              <div style={{ fontSize: '0.78rem', color: '#718096', marginTop: '0.25rem' }}>
+                {getCountryLabel(selectedDir)}
+              </div>
             </div>
 
             <div className="review-section">
@@ -353,7 +410,7 @@ export default function NewTransfer() {
                 <span className="review-row-value">1 {transfer.currencyFrom} = {transfer.exchangeRate} {transfer.currencyTo}</span>
               </div>
               <div className="review-row">
-                <span className="review-row-label">Комиссия</span>
+                <span className="review-row-label">Комиссия (1.5%)</span>
                 <span className="review-row-value">{transfer.commission?.toLocaleString('ru-RU')} {transfer.currencyFrom}</span>
               </div>
               <div className="review-row" style={{ fontWeight: 600 }}>
@@ -395,7 +452,6 @@ export default function NewTransfer() {
               {transfer.receiverName}
             </div>
 
-            {/* Mini timeline */}
             <div className="timeline" style={{ textAlign: 'left', marginTop: '1.25rem' }}>
               <div className="timeline-item timeline-item--completed">
                 <div className="timeline-dot" />
