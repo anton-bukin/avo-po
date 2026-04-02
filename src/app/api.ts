@@ -42,4 +42,22 @@ export const api = {
 
   getTransfer: (id: string) => request(`/transfers/${id}`),
   getTransfers: () => request('/transfers'),
+
+  // Admin
+  adminGetStats: () => request('/admin/stats'),
+  adminGetUsers: () => request('/admin/users'),
+  adminGetTransfers: (params?: { status?: string; userId?: string; limit?: number; offset?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.status) q.set('status', params.status);
+    if (params?.userId) q.set('userId', params.userId);
+    if (params?.limit) q.set('limit', String(params.limit));
+    if (params?.offset) q.set('offset', String(params.offset));
+    return request(`/admin/transfers?${q.toString()}`);
+  },
+  adminExportUrl: (params?: { status?: string; userId?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.status) q.set('status', params.status);
+    if (params?.userId) q.set('userId', params.userId);
+    return `/avo-po/api/v1/admin/transfers/export?${q.toString()}`;
+  },
 };

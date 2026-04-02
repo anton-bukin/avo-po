@@ -4,6 +4,7 @@ import { initDB } from './db.js';
 import authRouter from './routes/auth.js';
 import referencesRouter from './routes/references.js';
 import transfersRouter from './routes/transfers.js';
+import adminRouter from './routes/admin.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3100');
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/transfers', transfersRouter);
 app.use('/api/v1', referencesRouter);
+app.use('/api/v1/admin', adminRouter);
 
 // Health check
 app.get('/api/v1/health', (_req, res) => {
