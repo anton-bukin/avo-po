@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from './api';
 
@@ -10,22 +10,59 @@ interface Direction {
   currency_to: string;
 }
 
+interface RatesData {
+  rates: Record<string, number>;
+  commissionRate: number;
+  minCommission: number;
+}
+
 type Step = 'direction' | 'details' | 'calculate' | 'confirm' | 'done';
+
+// === Input masks ===
+
+function formatCardNumber(v: string): string {
+  const digits = v.replace(/\D/g, '').slice(0, 16);
+  return digits.replace(/(.{4})/g, '$1 ').trim();
+}
+
+function formatPhone(v: string): string {
+  // Always starts with +7, Russian format: +7 (XXX) XXX-XX-XX
+  let digits = v.replace(/\D/g, '');
+  // If user typed 8 at start, replace with 7
+  if (digits.startsWith('8') && digits.length > 1) digits = '7' + digits.slice(1);
+  // Ensure starts with 7
+  if (!digits.startsWith('7')) digits = '7' + digits;
+  digits = digits.slice(0, 11); // max 11 digits for RU
+
+  let result = '+7';
+  const rest = digits.slice(1);
+  if (rest.length > 0) result += ' (' + rest.slice(0, 3);
+  if (rest.length >= 3) result += ')';
+  if (rest.length > 3) result += ' ' + rest.slice(3, 6);
+  if (rest.length > 6) result += '-' + rest.slice(6, 8);
+  if (rest.length > 8) result += '-' + rest.slice(8, 10);
+  return result;
+}
+
+function rawPhone(v: string): string {
+  return '+' + v.replace(/\D/g, '');
+}
 
 export default function NewTransfer() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('direction');
   const [directions, setDirections] = useState<Direction[]>([]);
   const [selectedDir, setSelectedDir] = useState<Direction | null>(null);
+  const [ratesData, setRatesData] = useState<RatesData | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Form fields
   const [senderCard, setSenderCard] = useState('4111 1111 1111 1111');
-  const [senderName, setSenderName] = useState('Иван Иванов');
+  const [senderName, setSenderName] = useState('');
   const [receiverCard, setReceiverCard] = useState('');
   const [receiverName, setReceiverName] = useState('');
-  const [receiverPhone, setReceiverPhone] = useState('');
+  const [receiverPhone, setReceiverPhone] = useState('+7');
   const [amountSend, setAmountSend] = useState('10000');
 
   // Transfer state
@@ -34,11 +71,33 @@ export default function NewTransfer() {
 
   useEffect(() => {
     api.getDirections().then(setDirections).catch(() => {});
+    api.getRates().then(setRatesData).catch(() => {});
   }, []);
 
   useEffect(() => {
     return () => { if (pollInterval) clearInterval(pollInterval); };
   }, [pollInterval]);
+
+  // Client-side calculator
+  const calcPreview = useMemo(() => {
+    if (!ratesData || !selectedDir || !amountSend) return null;
+    const amount = parseFloat(amountSend);
+    if (!amount || amount <= 0) return null;
+
+    const rate = ratesData.rates[selectedDir.currency_to];
+    if (!rate) return null;
+
+    const commission = Math.max(amount * ratesData.commissionRate, ratesData.minCommission);
+    const amountReceive = Math.round(amount * rate * 100) / 100;
+    const totalDebit = Math.round((amount + commission) * 100) / 100;
+
+    return {
+      rate,
+      commission: Math.round(commission * 100) / 100,
+      amountReceive,
+      totalDebit,
+    };
+  }, [ratesData, selectedDir, amountSend]);
 
   const selectDirection = (dir: Direction) => {
     setSelectedDir(dir);
@@ -56,7 +115,7 @@ export default function NewTransfer() {
         senderName,
         receiverCard: receiverCard.replace(/\s/g, ''),
         receiverName,
-        receiverPhone,
+        receiverPhone: rawPhone(receiverPhone),
         amountSend: parseFloat(amountSend),
       });
       const calc = await api.calculateTransfer(t.id, parseFloat(amountSend));
@@ -77,7 +136,6 @@ export default function NewTransfer() {
       setTransfer(confirmed);
       setStep('done');
 
-      // Poll for status change
       const interval = setInterval(async () => {
         try {
           const updated = await api.getTransfer(transfer.id);
@@ -95,9 +153,14 @@ export default function NewTransfer() {
     }
   };
 
-  const formatCard = (v: string) => {
-    const digits = v.replace(/\D/g, '').slice(0, 16);
-    return digits.replace(/(.{4})/g, '$1 ').trim();
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Don't allow erasing the +7 prefix
+    if (val.replace(/\D/g, '').length < 1) {
+      setReceiverPhone('+7');
+      return;
+    }
+    setReceiverPhone(formatPhone(val));
   };
 
   return (
@@ -138,7 +201,13 @@ export default function NewTransfer() {
           <h3>Отправитель</h3>
           <div className="form-group">
             <label>Номер карты</label>
-            <input value={senderCard} onChange={e => setSenderCard(formatCard(e.target.value))} placeholder="0000 0000 0000 0000" />
+            <input
+              value={senderCard}
+              onChange={e => setSenderCard(formatCardNumber(e.target.value))}
+              placeholder="0000 0000 0000 0000"
+              inputMode="numeric"
+              maxLength={19}
+            />
           </div>
           <div className="form-group">
             <label>Имя отправителя</label>
@@ -148,25 +217,67 @@ export default function NewTransfer() {
           <h3 style={{ marginTop: '1rem' }}>Получатель</h3>
           <div className="form-group">
             <label>Номер карты / счёт получателя</label>
-            <input value={receiverCard} onChange={e => setReceiverCard(e.target.value)} placeholder="8600 0000 0000 0000" />
+            <input
+              value={receiverCard}
+              onChange={e => setReceiverCard(formatCardNumber(e.target.value))}
+              placeholder="0000 0000 0000 0000"
+              inputMode="numeric"
+              maxLength={19}
+            />
           </div>
           <div className="form-group">
             <label>Имя получателя</label>
             <input value={receiverName} onChange={e => setReceiverName(e.target.value)} placeholder="Имя Фамилия" />
           </div>
           <div className="form-group">
-            <label>Телефон получателя</label>
-            <input value={receiverPhone} onChange={e => setReceiverPhone(e.target.value)} placeholder="+998 90 123 45 67" />
+            <label>Телефон получателя (РФ)</label>
+            <input
+              value={receiverPhone}
+              onChange={handlePhoneChange}
+              placeholder="+7 (900) 123-45-67"
+              inputMode="tel"
+              maxLength={18}
+            />
           </div>
 
-          <h3 style={{ marginTop: '1rem' }}>Сумма</h3>
+          <h3 style={{ marginTop: '1rem' }}>Сумма и расчёт</h3>
           <div className="form-group">
             <label>Сумма отправки ({selectedDir.currency_from})</label>
-            <input type="number" value={amountSend} onChange={e => setAmountSend(e.target.value)} placeholder="10000" min="100" />
+            <input
+              type="number"
+              value={amountSend}
+              onChange={e => setAmountSend(e.target.value)}
+              placeholder="10000"
+              min="100"
+            />
           </div>
 
-          <button className="btn btn-primary" onClick={createAndCalculate} disabled={loading || !amountSend}>
-            {loading ? 'Расчёт...' : 'Рассчитать перевод'}
+          {/* Live calculator */}
+          {calcPreview && (
+            <div className="calc-result" style={{ marginBottom: '1rem' }}>
+              <div className="calc-row">
+                <span className="calc-row-label">Курс</span>
+                <span className="calc-row-value">1 {selectedDir.currency_from} = {calcPreview.rate} {selectedDir.currency_to}</span>
+              </div>
+              <div className="calc-row">
+                <span className="calc-row-label">Получатель получит</span>
+                <span className="calc-row-value" style={{ color: '#2b6cb0', fontWeight: 700 }}>
+                  {calcPreview.amountReceive.toLocaleString('ru-RU')} {selectedDir.currency_to}
+                </span>
+              </div>
+              <div className="calc-row">
+                <span className="calc-row-label">Комиссия (1.5%, мин. 50 {selectedDir.currency_from})</span>
+                <span className="calc-row-value">{calcPreview.commission.toLocaleString('ru-RU')} {selectedDir.currency_from}</span>
+              </div>
+              <div className="calc-row calc-row-total">
+                <span className="calc-row-label">Итого к списанию</span>
+                <span className="calc-row-value">{calcPreview.totalDebit.toLocaleString('ru-RU')} {selectedDir.currency_from}</span>
+              </div>
+            </div>
+          )}
+
+          <button className="btn btn-primary" onClick={createAndCalculate} disabled={loading || !amountSend || !senderCard || !receiverCard}>
+            {loading ? 'Расчёт...' : 'Продолжить'}
           </button>
           <button className="btn btn-outline" style={{ width: '100%', marginTop: '0.5rem' }} onClick={() => setStep('direction')}>
             Назад
@@ -176,11 +287,21 @@ export default function NewTransfer() {
 
       {step === 'calculate' && transfer && (
         <div className="pspay-card">
-          <h2>Параметры перевода</h2>
+          <h2>Подтверждение перевода</h2>
+
+          <div style={{ background: '#f7fafc', borderRadius: 8, padding: '0.75rem', fontSize: '0.82rem', color: '#4a5568', marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '0.4rem' }}>
+              <strong>Отправитель:</strong> {transfer.senderName || '—'} &middot; {transfer.senderCard ? transfer.senderCard.replace(/(.{4})/g, '$1 ').trim() : '—'}
+            </div>
+            <div>
+              <strong>Получатель:</strong> {transfer.receiverName || '—'} &middot; {transfer.receiverCard ? transfer.receiverCard.replace(/(.{4})/g, '$1 ').trim() : '—'}
+            </div>
+          </div>
+
           <div className="calc-result">
             <div className="calc-row">
               <span className="calc-row-label">Сумма отправки</span>
-              <span className="calc-row-value">{transfer.amountSend?.toLocaleString()} {transfer.currencyFrom}</span>
+              <span className="calc-row-value">{transfer.amountSend?.toLocaleString('ru-RU')} {transfer.currencyFrom}</span>
             </div>
             <div className="calc-row">
               <span className="calc-row-label">Курс</span>
@@ -188,25 +309,22 @@ export default function NewTransfer() {
             </div>
             <div className="calc-row">
               <span className="calc-row-label">Сумма получения</span>
-              <span className="calc-row-value">{transfer.amountReceive?.toLocaleString()} {transfer.currencyTo}</span>
+              <span className="calc-row-value" style={{ color: '#2b6cb0', fontWeight: 700 }}>
+                {transfer.amountReceive?.toLocaleString('ru-RU')} {transfer.currencyTo}
+              </span>
             </div>
             <div className="calc-row">
               <span className="calc-row-label">Комиссия</span>
-              <span className="calc-row-value">{transfer.commission?.toLocaleString()} {transfer.currencyFrom}</span>
+              <span className="calc-row-value">{transfer.commission?.toLocaleString('ru-RU')} {transfer.currencyFrom}</span>
             </div>
             <div className="calc-row calc-row-total">
               <span className="calc-row-label">Итого к списанию</span>
-              <span className="calc-row-value">{transfer.totalDebit?.toLocaleString()} {transfer.currencyFrom}</span>
+              <span className="calc-row-value">{transfer.totalDebit?.toLocaleString('ru-RU')} {transfer.currencyFrom}</span>
             </div>
           </div>
 
-          <div style={{ background: '#f7fafc', borderRadius: 8, padding: '0.75rem', fontSize: '0.8rem', color: '#718096', marginBottom: '1rem' }}>
-            <div>Карта отправителя: {transfer.senderCard}</div>
-            <div>Получатель: {transfer.receiverName} ({transfer.receiverCard})</div>
-          </div>
-
-          <button className="btn btn-primary" onClick={confirmTransfer} disabled={loading}>
-            {loading ? 'Подтверждение...' : 'Подтвердить перевод'}
+          <button className="btn btn-primary" onClick={confirmTransfer} disabled={loading} style={{ marginTop: '0.75rem' }}>
+            {loading ? 'Подтверждение...' : 'Подтвердить и отправить'}
           </button>
           <button className="btn btn-outline" style={{ width: '100%', marginTop: '0.5rem' }} onClick={() => setStep('details')}>
             Изменить
@@ -228,11 +346,11 @@ export default function NewTransfer() {
           <div className="calc-result" style={{ marginTop: '1rem', textAlign: 'left' }}>
             <div className="calc-row">
               <span className="calc-row-label">Отправлено</span>
-              <span className="calc-row-value">{transfer.totalDebit?.toLocaleString()} {transfer.currencyFrom}</span>
+              <span className="calc-row-value">{transfer.totalDebit?.toLocaleString('ru-RU')} {transfer.currencyFrom}</span>
             </div>
             <div className="calc-row">
               <span className="calc-row-label">Получит</span>
-              <span className="calc-row-value">{transfer.amountReceive?.toLocaleString()} {transfer.currencyTo}</span>
+              <span className="calc-row-value">{transfer.amountReceive?.toLocaleString('ru-RU')} {transfer.currencyTo}</span>
             </div>
             <div className="calc-row">
               <span className="calc-row-label">Получатель</span>
@@ -253,7 +371,7 @@ export default function NewTransfer() {
               setTransfer(null);
               setReceiverCard('');
               setReceiverName('');
-              setReceiverPhone('');
+              setReceiverPhone('+7');
             }}>
               Новый перевод
             </button>

@@ -20,12 +20,10 @@ export default function TransferList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ margin: 0 }}>Мои переводы</h2>
-        <button className="btn btn-primary btn-sm" onClick={() => navigate('/avo-po/app/new')}>
-          + Новый перевод
-        </button>
-      </div>
+      <h2 style={{ margin: '0 0 0.75rem 0' }}>Мои переводы</h2>
+      <button className="btn btn-primary" onClick={() => navigate('/avo-po/app/new')} style={{ width: '100%', marginBottom: '1rem' }}>
+        + Новый перевод
+      </button>
 
       {transfers.length === 0 ? (
         <div className="pspay-card">

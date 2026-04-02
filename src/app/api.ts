@@ -29,6 +29,7 @@ export const api = {
   getCountries: () => request('/countries'),
   getProviders: () => request('/providers'),
   getPaymentMethods: () => request('/payment-methods'),
+  getRates: () => request('/rates'),
 
   createTransfer: (data: any) =>
     request('/transfers', { method: 'POST', body: JSON.stringify(data) }),

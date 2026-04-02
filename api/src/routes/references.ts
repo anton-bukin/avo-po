@@ -28,4 +28,20 @@ router.get('/payment-methods', authMiddleware, async (_req: AuthRequest, res: Re
   res.json(rows);
 });
 
+// GET /api/v1/rates — exchange rates and commission info for client calculator
+router.get('/rates', authMiddleware, async (_req: AuthRequest, res: Response) => {
+  const rates: Record<string, number> = {
+    UZS: 140.5,
+    TJS: 0.122,
+    KGS: 0.97,
+    KZT: 5.28,
+    AZN: 0.0196,
+    GEL: 0.031,
+    TRY: 0.394,
+    CNY: 0.0835,
+    AMD: 4.45,
+  };
+  res.json({ rates, commissionRate: 0.015, minCommission: 50 });
+});
+
 export default router;
