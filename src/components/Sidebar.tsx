@@ -7,7 +7,23 @@ interface NavItem {
   num: string;
 }
 
-const navItems: NavItem[] = [
+const platformNav: NavItem[] = [
+  { id: 'overview', label: 'Обзор платформы', num: '1' },
+  { id: 'core-engine', label: 'Transaction Core Engine', num: '2' },
+  { id: 'dependencies', label: 'Зависимости', num: '2.2' },
+  { id: 'data-storage', label: 'Слой хранения данных', num: '3' },
+  { id: 'elasticsearch', label: 'Elasticsearch', num: '4' },
+  { id: 'redis', label: 'Redis', num: '5' },
+  { id: 'cache-updater', label: 'Cache Updater', num: '6' },
+  { id: 'api-gateway', label: 'API-контур', num: '7' },
+  { id: 'kubernetes', label: 'Kubernetes', num: '8' },
+  { id: 'client-access', label: 'Клиентские интерфейсы', num: '9' },
+  { id: 'communications', label: 'Коммуникации', num: '10' },
+  { id: 'object-storage', label: 'Объектное хранилище', num: '11' },
+  { id: 'conclusion', label: 'Заключение', num: '12' },
+];
+
+const userNav: NavItem[] = [
   { id: 'about', label: 'О сервисе', num: '' },
   { id: 'user-register', label: 'Регистрация и вход', num: '1' },
   { id: 'user-new-transfer', label: 'Создание перевода', num: '2' },
@@ -18,7 +34,10 @@ const navItems: NavItem[] = [
   { id: 'user-history', label: 'История переводов', num: '7' },
   { id: 'user-repeat', label: 'Повтор перевода', num: '8' },
   { id: 'user-faq', label: 'FAQ', num: '9' },
-  { id: 'admin-start', label: 'Админ-панель', num: '' },
+];
+
+const adminNav: NavItem[] = [
+  { id: 'admin-start', label: 'Обзор админ-панели', num: '' },
   { id: 'admin-dashboard', label: 'Dashboard', num: 'A1' },
   { id: 'admin-users', label: 'Пользователи', num: 'A2' },
   { id: 'admin-transfers', label: 'Операции', num: 'A3' },
@@ -26,13 +45,27 @@ const navItems: NavItem[] = [
   { id: 'admin-export', label: 'Выгрузка данных', num: 'A5' },
 ];
 
+const NAV_MAP = {
+  platform: platformNav,
+  user: userNav,
+  admin: adminNav,
+};
+
+const TITLES = {
+  platform: 'Документация',
+  user: 'Для пользователя',
+  admin: 'Для администратора',
+};
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  mode: 'platform' | 'user' | 'admin';
 }
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const [activeId, setActiveId] = useState('overview');
+export default function Sidebar({ isOpen, onClose, mode }: SidebarProps) {
+  const navItems = NAV_MAP[mode];
+  const [activeId, setActiveId] = useState(navItems[0]?.id || '');
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -51,7 +84,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [navItems]);
 
   const handleClick = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -64,7 +97,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="sidebar-logo-icon">PS</div>
         <div>
           <div className="sidebar-logo-name">PS Pay</div>
-          <div className="sidebar-logo-sub">Руководство</div>
+          <div className="sidebar-logo-sub">{TITLES[mode]}</div>
         </div>
       </div>
       <nav className="sidebar-nav">
@@ -80,7 +113,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         ))}
       </nav>
       <div className="sidebar-footer">
-        Версия документа: 1.2
+        PS Pay &copy; 2026
       </div>
     </aside>
   );

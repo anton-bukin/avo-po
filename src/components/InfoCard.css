@@ -1,0 +1,30 @@
+.info-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: inline-block;
+  min-width: 280px;
+  margin-bottom: 1rem;
+}
+
+.info-card-row {
+  display: flex;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+.info-card-row:last-child {
+  border-bottom: none;
+}
+
+.info-card-label {
+  font-weight: 600;
+  color: var(--text);
+  min-width: 180px;
+  flex-shrink: 0;
+}
+
+.info-card-value {
+  color: var(--text-secondary);
+}
