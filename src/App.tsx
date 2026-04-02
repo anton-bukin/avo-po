@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import Overview from './sections/Overview';
@@ -14,8 +15,9 @@ import ClientAccess from './sections/ClientAccess';
 import Communications from './sections/Communications';
 import ObjectStorage from './sections/ObjectStorage';
 import Conclusion from './sections/Conclusion';
+import PSPayApp from './app/PSPayApp';
 
-function App() {
+function DocsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -30,6 +32,9 @@ function App() {
           <h1>Платформа для Сервиса переводов с платёжных карт на платёжные карты и счета</h1>
           <div className="header-subtitle">Описание функциональности, компонентов и зависимостей</div>
           <div className="header-version">Версия документа: 1.2</div>
+          <Link to="/avo-po/app" style={{ display: 'inline-block', marginTop: '0.75rem', background: '#4f6ef7', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>
+            Открыть приложение PS Pay &rarr;
+          </Link>
         </div>
         <Overview />
         <CoreEngine />
@@ -46,6 +51,18 @@ function App() {
         <Conclusion />
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/avo-po/app/*" element={<PSPayApp />} />
+        <Route path="/avo-po/*" element={<DocsPage />} />
+        <Route path="*" element={<DocsPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

@@ -1,0 +1,327 @@
+/* PS Pay App Styles */
+.pspay {
+  min-height: 100vh;
+  background: #f0f2f5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.pspay-header {
+  background: #1a1f36;
+  color: white;
+  padding: 0 1.5rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.pspay-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: white;
+}
+
+.pspay-header-logo-icon {
+  background: #4f6ef7;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.pspay-header-logo-text {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.pspay-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pspay-header-user {
+  font-size: 0.82rem;
+  opacity: 0.8;
+}
+
+.pspay-header-btn {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.pspay-header-btn:hover { background: rgba(255,255,255,0.2); }
+
+.pspay-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+/* Forms */
+.pspay-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-bottom: 1rem;
+}
+
+.pspay-card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #1a202c;
+}
+
+.pspay-card h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  color: #1a202c;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 0.3rem;
+}
+
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: #4f6ef7;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background: #4f6ef7;
+  color: white;
+  width: 100%;
+}
+.btn-primary:hover { background: #3d5bd9; }
+.btn-primary:disabled { background: #a0aec0; cursor: not-allowed; }
+
+.btn-outline {
+  background: transparent;
+  color: #4f6ef7;
+  border: 1px solid #4f6ef7;
+}
+.btn-outline:hover { background: #ebf0ff; }
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.error-msg {
+  background: #fff5f5;
+  color: #c53030;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Calc result */
+.calc-result {
+  background: #f7fafc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  font-size: 0.88rem;
+}
+.calc-row-label { color: #718096; }
+.calc-row-value { font-weight: 600; color: #1a202c; }
+.calc-row-total {
+  border-top: 2px solid #e2e8f0;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.status-CREATED { background: #edf2f7; color: #4a5568; }
+.status-PROCESSING { background: #fefcbf; color: #975a16; }
+.status-COMPLETED { background: #c6f6d5; color: #276749; }
+.status-FAILED { background: #fed7d7; color: #9b2c2c; }
+
+/* Transfer list */
+.transfer-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.transfer-list-item:hover { background: #f7fafc; margin: 0 -1rem; padding: 0.85rem 1rem; border-radius: 8px; }
+.transfer-list-item:last-child { border-bottom: none; }
+
+.transfer-list-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.transfer-list-dir {
+  font-weight: 500;
+  font-size: 0.88rem;
+  color: #1a202c;
+}
+.transfer-list-date {
+  font-size: 0.75rem;
+  color: #a0aec0;
+}
+.transfer-list-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+.transfer-list-amount {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1a202c;
+}
+
+/* Direction select */
+.direction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+.direction-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.direction-card:hover { border-color: #4f6ef7; background: #ebf0ff; }
+.direction-card.selected { border-color: #4f6ef7; background: #ebf0ff; }
+.direction-card-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.direction-card-pair {
+  font-size: 0.72rem;
+  color: #718096;
+  margin-top: 0.2rem;
+}
+
+/* Login page centering */
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1f36 0%, #2d3561 100%);
+  padding: 1rem;
+}
+
+.login-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.login-card h1 {
+  text-align: center;
+  margin-bottom: 0.3rem;
+  font-size: 1.4rem;
+}
+.login-card p {
+  text-align: center;
+  color: #718096;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.login-tabs {
+  display: flex;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+.login-tab {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #a0aec0;
+  cursor: pointer;
+  font-family: inherit;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+.login-tab.active { color: #4f6ef7; border-bottom-color: #4f6ef7; }
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #a0aec0;
+}
+.empty-state-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
