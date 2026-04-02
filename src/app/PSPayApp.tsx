@@ -11,6 +11,10 @@ import TransfersPage from './admin/TransfersPage';
 import './App.css';
 import './admin/admin.css';
 
+function getInitials(name: string): string {
+  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
+
 export default function PSPayApp() {
   const { user, isAuth, login, logout } = useAuth();
   const navigate = useNavigate();
@@ -21,14 +25,12 @@ export default function PSPayApp() {
 
   return (
     <Routes>
-      {/* Admin routes */}
       <Route path="admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="transfers" element={<TransfersPage />} />
       </Route>
 
-      {/* User app routes */}
       <Route path="*" element={
         <div className="pspay">
           <header className="pspay-header">
@@ -37,7 +39,7 @@ export default function PSPayApp() {
               <span className="pspay-header-logo-text">PS Pay</span>
             </Link>
             <div className="pspay-header-nav">
-              <span className="pspay-header-user">{user?.fullName}</span>
+              <div className="pspay-header-avatar">{user ? getInitials(user.fullName) : '?'}</div>
               <Link to="/avo-po/app/admin" className="pspay-header-btn" style={{ textDecoration: 'none' }}>Admin</Link>
               <button className="pspay-header-btn" onClick={() => { logout(); navigate('/avo-po/app'); }}>Выход</button>
             </div>

@@ -18,12 +18,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setError('');
     setLoading(true);
     try {
-      let data;
-      if (tab === 'login') {
-        data = await api.login(email, password);
-      } else {
-        data = await api.register(email, password, fullName);
-      }
+      const data = tab === 'login'
+        ? await api.login(email, password)
+        : await api.register(email, password, fullName);
       onLogin(data.token, data.user);
     } catch (err: any) {
       setError(err.message);
@@ -35,8 +32,10 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   return (
     <div className="login-page">
       <div className="login-card">
-        <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
-          <div style={{ background: '#4f6ef7', width: 48, height: 48, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.1rem' }}>PS</div>
+        <div className="login-logo">
+          <div style={{ background: '#4f6ef7', width: 56, height: 56, borderRadius: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.3rem' }}>
+            PS
+          </div>
         </div>
         <h1>PS Pay</h1>
         <p>Сервис переводов с карты на карту</p>
@@ -69,9 +68,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         </form>
 
         {tab === 'login' && (
-          <p style={{ marginTop: '1rem', fontSize: '0.78rem', textAlign: 'center' }}>
-            Демо: demo@pspay.ru / demo123
-          </p>
+          <div className="login-demo">
+            Демо-доступ: demo@pspay.ru / demo123
+          </div>
         )}
       </div>
     </div>
