@@ -14,7 +14,6 @@ import CacheUpdater from './sections/CacheUpdater';
 import ApiGateway from './sections/ApiGateway';
 import Kubernetes from './sections/Kubernetes';
 import ClientAccess from './sections/ClientAccess';
-import Communications from './sections/Communications';
 import ObjectStorage from './sections/ObjectStorage';
 import Conclusion from './sections/Conclusion';
 
@@ -79,7 +78,6 @@ function PlatformDocsPage() {
         <ApiGateway />
         <Kubernetes />
         <ClientAccess />
-        <Communications />
         <ObjectStorage />
         <Conclusion />
       </main>

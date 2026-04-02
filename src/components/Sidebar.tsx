@@ -18,9 +18,8 @@ const platformNav: NavItem[] = [
   { id: 'api-gateway', label: 'API-контур', num: '7' },
   { id: 'kubernetes', label: 'Kubernetes', num: '8' },
   { id: 'client-access', label: 'Клиентские интерфейсы', num: '9' },
-  { id: 'communications', label: 'Коммуникации', num: '10' },
-  { id: 'object-storage', label: 'Объектное хранилище', num: '11' },
-  { id: 'conclusion', label: 'Заключение', num: '12' },
+  { id: 'object-storage', label: 'Объектное хранилище', num: '10' },
+  { id: 'conclusion', label: 'Заключение', num: '11' },
 ];
 
 const userNav: NavItem[] = [
