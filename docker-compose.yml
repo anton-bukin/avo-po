@@ -18,5 +18,17 @@ services:
       timeout: 3s
       retries: 5
 
+  api:
+    build: ./api-java
+    ports:
+      - "3100:3100"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pspay
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
