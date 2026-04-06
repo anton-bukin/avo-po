@@ -1,0 +1,22 @@
+server:
+  port: 3100
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pspay
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  jwt:
+    secret: pspay-demo-secret-key-2026-java-spring-boot
+    expiration-ms: 86400000
+  admin:
+    user-id: 1
