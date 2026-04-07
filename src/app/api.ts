@@ -4,8 +4,7 @@ function getToken(): string | null {
   return localStorage.getItem('pspay_token');
 }
 
-// Normalizes response keys from snake_case to camelCase so the frontend
-// can consume any backend (Node.js used snake_case, Java returns camelCase).
+// Normalizes response keys from snake_case to camelCase.
 // Values are not touched — safe for currency codes and numeric ID keys
 // since they don't contain underscores.
 function camelizeKeys(obj: any): any {
