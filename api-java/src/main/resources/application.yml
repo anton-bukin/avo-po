@@ -17,6 +17,6 @@ spring:
 app:
   jwt:
     secret: pspay-demo-secret-key-2026-java-spring-boot
-    expiration-ms: 86400000
+    expiration-ms: 2592000000  # 30 days
   admin:
     user-id: 1

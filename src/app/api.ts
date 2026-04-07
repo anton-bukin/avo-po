@@ -29,6 +29,18 @@ async function request(path: string, options: RequestInit = {}) {
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+
+  // Expired/invalid token: clear it and bounce to login so the UI doesn't
+  // hang on a "Loading..." state with a dead session.
+  if (res.status === 401 && token) {
+    localStorage.removeItem('pspay_token');
+    localStorage.removeItem('pspay_user');
+    if (!window.location.pathname.endsWith('/avo-po/app/login')) {
+      window.location.href = '/avo-po/app/login';
+    }
+    throw new Error('Сессия истекла');
+  }
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Ошибка сервера');
   return camelizeKeys(data);
