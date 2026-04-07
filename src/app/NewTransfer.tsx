@@ -6,20 +6,10 @@ interface Direction {
   id: number;
   code: string;
   name: string;
-  // Support both snake_case (Node.js) and camelCase (Java) API responses
-  country_from?: string;
-  country_to?: string;
-  currency_from?: string;
-  currency_to?: string;
-  countryFrom?: string;
-  countryTo?: string;
-  currencyFrom?: string;
-  currencyTo?: string;
+  countryTo: string;
+  currencyFrom: string;
+  currencyTo: string;
 }
-
-function d_countryTo(d: Direction): string { return d.countryTo || d.country_to || ''; }
-function d_currencyFrom(d: Direction): string { return d.currencyFrom || d.currency_from || ''; }
-function d_currencyTo(d: Direction): string { return d.currencyTo || d.currency_to || ''; }
 
 interface Country {
   code: string;
@@ -163,7 +153,7 @@ export default function NewTransfer() {
     if (!ratesData || !selectedDir || !amountSend) return null;
     const amount = parseFloat(amountSend);
     if (!amount || amount <= 0) return null;
-    const rate = ratesData.rates[d_currencyTo(selectedDir)];
+    const rate = ratesData.rates[selectedDir.currencyTo];
     if (!rate) return null;
     const commission = Math.max(amount * dirCommission.rate, dirCommission.min);
     const amountReceive = Math.round(amount * rate * 100) / 100;
@@ -224,7 +214,7 @@ export default function NewTransfer() {
 
   // Get country name for a direction
   const getCountryLabel = (dir: Direction) => {
-    const c = countries[d_countryTo(dir)];
+    const c = countries[dir.countryTo];
     return c ? `${c.flag} ${c.name}` : dir.name;
   };
 
@@ -239,15 +229,18 @@ export default function NewTransfer() {
           <div className="pspay-card">
             <h2>Куда отправить перевод?</h2>
             <div className="direction-chips">
-              {directions.map(dir => (
-                <button
-                  key={dir.id}
-                  className={`direction-chip ${selectedDir?.id === dir.id ? 'direction-chip--selected' : ''}`}
-                  onClick={() => setSelectedDir(dir)}
-                >
-                  {countries[d_countryTo(dir)]?.flag || ''} {countries[d_countryTo(dir)]?.name || d_currencyTo(dir)}
-                </button>
-              ))}
+              {directions.map(dir => {
+                const c = countries[dir.countryTo];
+                return (
+                  <button
+                    key={dir.id}
+                    className={`direction-chip ${selectedDir?.id === dir.id ? 'direction-chip--selected' : ''}`}
+                    onClick={() => setSelectedDir(dir)}
+                  >
+                    {c?.flag || ''} {c?.name || dir.currencyTo}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -264,34 +257,34 @@ export default function NewTransfer() {
                     placeholder="0"
                     min="100"
                   />
-                  <span className="amount-row-currency">{d_currencyFrom(selectedDir)}</span>
+                  <span className="amount-row-currency">{selectedDir.currencyFrom}</span>
                 </div>
 
                 {calcPreview && (
                   <>
                     <div className="amount-divider">
                       <span>Курс:</span>
-                      <span className="amount-divider-rate">1 {d_currencyFrom(selectedDir)} = {calcPreview.rate} {d_currencyTo(selectedDir)}</span>
+                      <span className="amount-divider-rate">1 {selectedDir.currencyFrom} = {calcPreview.rate} {selectedDir.currencyTo}</span>
                     </div>
                     <div className="amount-receive">
-                      <span className="amount-row-label">Получит в {countries[d_countryTo(selectedDir)]?.name || d_currencyTo(selectedDir)}</span>
+                      <span className="amount-row-label">Получит в {countries[selectedDir.countryTo]?.name || selectedDir.currencyTo}</span>
                       <span className="amount-receive-value">{calcPreview.amountReceive.toLocaleString('ru-RU')}</span>
-                      <span className="amount-row-currency">{d_currencyTo(selectedDir)}</span>
+                      <span className="amount-row-currency">{selectedDir.currencyTo}</span>
                     </div>
                     <div className="amount-fee-line">
-                      <span>Комиссия ({calcPreview.commissionRate}%, мин. {calcPreview.minCommission} {d_currencyFrom(selectedDir)})</span>
-                      <span className="amount-fee-value">{calcPreview.commission.toLocaleString('ru-RU')} {d_currencyFrom(selectedDir)}</span>
+                      <span>Комиссия ({calcPreview.commissionRate}%, мин. {calcPreview.minCommission} {selectedDir.currencyFrom})</span>
+                      <span className="amount-fee-value">{calcPreview.commission.toLocaleString('ru-RU')} {selectedDir.currencyFrom}</span>
                     </div>
                     <div className="amount-fee-line">
                       <span>Итого к списанию</span>
-                      <span className="amount-fee-value">{calcPreview.totalDebit.toLocaleString('ru-RU')} {d_currencyFrom(selectedDir)}</span>
+                      <span className="amount-fee-value">{calcPreview.totalDebit.toLocaleString('ru-RU')} {selectedDir.currencyFrom}</span>
                     </div>
                   </>
                 )}
               </div>
 
               <div style={{ fontSize: '0.72rem', color: '#a0aec0', textAlign: 'center', margin: '0.5rem 0' }}>
-                Комиссия за перевод: {dirCommission.rate * 100}% от суммы (минимум {dirCommission.min} {d_currencyFrom(selectedDir)})
+                Комиссия за перевод: {dirCommission.rate * 100}% от суммы (минимум {dirCommission.min} {selectedDir.currencyFrom})
               </div>
             </>
           )}
@@ -311,7 +304,7 @@ export default function NewTransfer() {
         <div className="step-content">
           <div className="summary-bar">
             <span className="summary-bar-direction">{getCountryLabel(selectedDir)}</span>
-            <span className="summary-bar-amount">{parseFloat(amountSend).toLocaleString('ru-RU')} {d_currencyFrom(selectedDir)}</span>
+            <span className="summary-bar-amount">{parseFloat(amountSend).toLocaleString('ru-RU')} {selectedDir.currencyFrom}</span>
           </div>
 
           <div className="pspay-card">
@@ -346,7 +339,7 @@ export default function NewTransfer() {
         <div className="step-content">
           <div className="summary-bar">
             <span className="summary-bar-direction">{getCountryLabel(selectedDir)}</span>
-            <span className="summary-bar-amount">{parseFloat(amountSend).toLocaleString('ru-RU')} {d_currencyFrom(selectedDir)}</span>
+            <span className="summary-bar-amount">{parseFloat(amountSend).toLocaleString('ru-RU')} {selectedDir.currencyFrom}</span>
           </div>
 
           <div className="pspay-card">

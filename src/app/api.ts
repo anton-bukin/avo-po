@@ -4,6 +4,23 @@ function getToken(): string | null {
   return localStorage.getItem('pspay_token');
 }
 
+// Normalizes response keys from snake_case to camelCase so the frontend
+// can consume any backend (Node.js used snake_case, Java returns camelCase).
+// Values are not touched — safe for currency codes and numeric ID keys
+// since they don't contain underscores.
+function camelizeKeys(obj: any): any {
+  if (Array.isArray(obj)) return obj.map(camelizeKeys);
+  if (obj !== null && typeof obj === 'object' && obj.constructor === Object) {
+    const out: any = {};
+    for (const [k, v] of Object.entries(obj)) {
+      const camelKey = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+      out[camelKey] = camelizeKeys(v);
+    }
+    return out;
+  }
+  return obj;
+}
+
 async function request(path: string, options: RequestInit = {}) {
   const token = getToken();
   const headers: Record<string, string> = {
@@ -15,7 +32,7 @@ async function request(path: string, options: RequestInit = {}) {
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Ошибка сервера');
-  return data;
+  return camelizeKeys(data);
 }
 
 export const api = {
