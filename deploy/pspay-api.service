@@ -1,0 +1,16 @@
+[Unit]
+Description=PS Pay API (Spring Boot)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/avo-po/api-java
+ExecStart=/usr/bin/java -jar /root/avo-po/api-java/target/pspay-api-1.0.0.jar
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

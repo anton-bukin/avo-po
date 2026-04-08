@@ -1,0 +1,45 @@
+# PS Pay (avo-po) — пример nginx-конфига для разворачивания на новом сервере.
+#
+# Кладёте этот блок в /etc/nginx/sites-available/<name> (или вставляете
+# в существующий server { ... }), затем:
+#   ln -s /etc/nginx/sites-available/<name> /etc/nginx/sites-enabled/
+#   nginx -t && systemctl reload nginx
+#
+# Предполагается:
+#   - билд фронта собран (`npm run build`) и скопирован в /var/www/avo-po/
+#   - Java-бэкенд запущен на 127.0.0.1:3100 (через systemd unit pspay-api.service)
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name platform.pspay.ru;   # подставьте ваш домен
+
+    # ----- API: проксируем /avo-po/api/ → Spring Boot на :3100 -----
+    location /avo-po/api/ {
+        proxy_pass http://127.0.0.1:3100/api/;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # ----- Статические ассеты фронта -----
+    # ВАЖНО: ассеты НЕ должны попадать в SPA-fallback ниже. Если файла
+    # нет — нужно вернуть честный 404, иначе nginx отдаст index.html
+    # с Content-Type text/html, браузер откажется исполнять как JS,
+    # и пользователь увидит пустую страницу. Именно по этой причине
+    # ломался /avo-po/app/ при предыдущем деплое.
+    location ^~ /avo-po/assets/ {
+        alias /var/www/avo-po/assets/;
+        try_files $uri =404;
+        access_log off;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # ----- SPA: всё остальное под /avo-po/ → index.html -----
+    location /avo-po/ {
+        alias /var/www/avo-po/;
+        try_files $uri $uri/ /avo-po/index.html;
+    }
+}

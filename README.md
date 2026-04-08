@@ -86,11 +86,41 @@ mvn spring-boot:run  # http://localhost:3100
 
 ## Деплой
 
+### На уже настроенный сервер
+
 ```bash
 ./deploy.sh
 ```
 
 Скрипт собирает фронт (`npm run build` → `/var/www/avo-po/`) и бэк (`mvn clean package` → рестарт `pspay-api` через systemd). Nginx проксирует `/avo-po/api/` на `localhost:3100`.
+
+### На новый сервер с нуля
+
+Шаблоны конфигов лежат в [`deploy/`](deploy/).
+
+1. **Зависимости:** Node.js 18+, JDK 17, Maven, PostgreSQL 16, nginx.
+2. **Клонировать репо** в `/root/avo-po` (или подправить пути в `deploy/pspay-api.service` и `deploy.sh`).
+3. **PostgreSQL:** создать БД `pspay`, применить `docker/initdb/01-schema.sql` и `02-seed.sql` (или поднять Postgres через docker-compose с volume `./docker/initdb:/docker-entrypoint-initdb.d`).
+4. **Бэкенд:**
+   ```bash
+   cp deploy/pspay-api.service /etc/systemd/system/
+   systemctl daemon-reload && systemctl enable --now pspay-api
+   ```
+5. **Фронтенд:**
+   ```bash
+   npm install && npm run build
+   mkdir -p /var/www/avo-po && cp -r dist/. /var/www/avo-po/
+   ```
+   ⚠️ В [`vite.config.ts`](vite.config.ts) обязательно должен быть `base: '/avo-po/'`. Без него ассеты в `index.html` ссылаются относительно (`assets/...`), и при открытии вложенных путей вроде `/avo-po/app/` бандл резолвится в несуществующий `/avo-po/app/assets/...`, ловится SPA-fallback'ом nginx и возвращается как HTML — в браузере пустая страница.
+6. **Nginx:**
+   ```bash
+   cp deploy/nginx.conf.example /etc/nginx/sites-available/avo-po
+   # подставить свой server_name
+   ln -s /etc/nginx/sites-available/avo-po /etc/nginx/sites-enabled/
+   nginx -t && systemctl reload nginx
+   ```
+   В шаблоне отдельный `location ^~ /avo-po/assets/` с `try_files $uri =404;` — это критично, чтобы пропавшие ассеты возвращали честный 404, а не маскировались под index.html.
+7. После этого `./deploy.sh` уже можно использовать для последующих обновлений.
 
 ## API
 
