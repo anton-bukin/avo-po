@@ -14,17 +14,17 @@ INSERT INTO countries (code, name, currency, flag) VALUES
     ('ARM', 'Армения', 'AMD', '🇦🇲')
 ON CONFLICT DO NOTHING;
 
--- Directions
-INSERT INTO directions (code, name, country_from, country_to, currency_from, currency_to) VALUES
-    ('RU-UZ', 'Россия → Узбекистан', 'RUS', 'UZB', 'RUB', 'UZS'),
-    ('RU-TJ', 'Россия → Таджикистан', 'RUS', 'TJK', 'RUB', 'TJS'),
-    ('RU-KG', 'Россия → Кыргызстан', 'RUS', 'KGZ', 'RUB', 'KGS'),
-    ('RU-KZ', 'Россия → Казахстан', 'RUS', 'KAZ', 'RUB', 'KZT'),
-    ('RU-AZ', 'Россия → Азербайджан', 'RUS', 'AZE', 'RUB', 'AZN'),
-    ('RU-GE', 'Россия → Грузия', 'RUS', 'GEO', 'RUB', 'GEL'),
-    ('RU-TR', 'Россия → Турция', 'RUS', 'TUR', 'RUB', 'TRY'),
-    ('RU-CN', 'Россия → Китай', 'RUS', 'CHN', 'RUB', 'CNY'),
-    ('RU-AM', 'Россия → Армения', 'RUS', 'ARM', 'RUB', 'AMD')
+-- Directions (margin/commission/min_commission — дефолты из схемы, кроме RU-UZ/RU-TJ)
+INSERT INTO directions (code, name, country_from, country_to, currency_from, currency_to, margin_percent) VALUES
+    ('RU-UZ', 'Россия → Узбекистан', 'RUS', 'UZB', 'RUB', 'UZS', 3.00),
+    ('RU-TJ', 'Россия → Таджикистан', 'RUS', 'TJK', 'RUB', 'TJS', 4.00),
+    ('RU-KG', 'Россия → Кыргызстан', 'RUS', 'KGZ', 'RUB', 'KGS', 0.00),
+    ('RU-KZ', 'Россия → Казахстан', 'RUS', 'KAZ', 'RUB', 'KZT', 0.00),
+    ('RU-AZ', 'Россия → Азербайджан', 'RUS', 'AZE', 'RUB', 'AZN', 0.00),
+    ('RU-GE', 'Россия → Грузия', 'RUS', 'GEO', 'RUB', 'GEL', 0.00),
+    ('RU-TR', 'Россия → Турция', 'RUS', 'TUR', 'RUB', 'TRY', 0.00),
+    ('RU-CN', 'Россия → Китай', 'RUS', 'CHN', 'RUB', 'CNY', 0.00),
+    ('RU-AM', 'Россия → Армения', 'RUS', 'ARM', 'RUB', 'AMD', 0.00)
 ON CONFLICT DO NOTHING;
 
 -- Providers

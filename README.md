@@ -100,7 +100,11 @@ mvn spring-boot:run  # http://localhost:3100
 
 1. **Зависимости:** Node.js 18+, JDK 17, Maven, PostgreSQL 16, nginx.
 2. **Клонировать репо** в `/root/avo-po` (или подправить пути в `deploy/pspay-api.service` и `deploy.sh`).
-3. **PostgreSQL:** создать БД `pspay`, применить `docker/initdb/01-schema.sql` и `02-seed.sql` (или поднять Postgres через docker-compose с volume `./docker/initdb:/docker-entrypoint-initdb.d`).
+3. **PostgreSQL:** создать БД `pspay` и наполнить данными:
+   ```bash
+   PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres ./scripts/init-db.sh
+   ```
+   Скрипт идемпотентный — применяет `docker/initdb/01-schema.sql` (схема) и `02-seed.sql` (справочники стран, направлений, провайдеров, способов оплаты + демо-юзер). Все операции под `IF NOT EXISTS` / `ON CONFLICT DO NOTHING`, так что безопасен на уже заполненной базе. Альтернатива — поднять Postgres через docker-compose с volume `./docker/initdb:/docker-entrypoint-initdb.d`.
 4. **Бэкенд:**
    ```bash
    cp deploy/pspay-api.service /etc/systemd/system/
