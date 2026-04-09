@@ -34,8 +34,8 @@ export default function Overview() {
         <div className="arch-layer arch-layer--3">
           <div className="arch-layer-icon">&#128279;</div>
           <div>
-            <strong>API и коммуникации</strong>
-            <span>Очереди сообщений и коммуникационные сервисы</span>
+            <strong>API и интеграции</strong>
+            <span>REST/SOAP-интеграции и обмен данными</span>
           </div>
         </div>
         <div className="arch-layer arch-layer--4">

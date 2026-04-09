@@ -20,7 +20,7 @@ export default function CoreEngine() {
         <li>Интеграции с внешними финансовыми системами</li>
         <li>Управление кешами и индексными данными</li>
         <li>Формирование документов</li>
-        <li>Отправка коммуникаций пользователям</li>
+        <li>Уведомления пользователей</li>
       </ul>
 
       <h3 style={{ marginTop: '1rem' }}>Среда выполнения</h3>
@@ -53,8 +53,8 @@ export default function CoreEngine() {
           <div className="component-card-desc">HTTP-клиенты, SOAP-интеграции, OAuth-авторизация</div>
         </div>
         <div className="component-card">
-          <div className="component-card-title">Коммуникации</div>
-          <div className="component-card-desc">Email-уведомления, SMS-уведомления, push-уведомления</div>
+          <div className="component-card-title">Уведомления</div>
+          <div className="component-card-desc">Email, SMS, push-уведомления</div>
         </div>
         <div className="component-card">
           <div className="component-card-title">Инфраструктура</div>

@@ -48,7 +48,6 @@ export default function DepsTable({ title, data, defaultOpen = false }: DepsTabl
               <thead>
                 <tr>
                   <th>Библиотека</th>
-                  <th>Версия</th>
                   <th>Назначение</th>
                   <th>Функциональность</th>
                   <th>Лицензия</th>
@@ -58,7 +57,6 @@ export default function DepsTable({ title, data, defaultOpen = false }: DepsTabl
                 {filtered.map((d, i) => (
                   <tr key={i}>
                     <td><code className="lib-name">{d.library}</code></td>
-                    <td><span className="version-tag">{d.version}</span></td>
                     <td>{d.purpose}</td>
                     <td>{d.platformUse}</td>
                     <td><span className={`license-tag license-tag--${d.license === 'Permissive' ? 'green' : d.license.includes('Проприетарная') ? 'red' : 'yellow'}`}>{d.license}</span></td>
