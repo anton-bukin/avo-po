@@ -19,11 +19,6 @@ export default function CacheUpdater() {
       </div>
       <InfoCard items={[
         { label: 'Тип развёртывания', value: 'Docker (docker-compose) на VM в облаке' },
-        { label: 'ОС', value: 'Ubuntu 22.04' },
-        { label: 'Docker Engine', value: '28.1.1' },
-        { label: 'containerd', value: '1.7.27' },
-        { label: 'Docker Compose', value: '2.35.1' },
-        { label: 'Java', value: '17' },
       ]} />
       <DepsTable title="Зависимости cache-updater" data={cacheUpdaterDeps} />
     </Section>

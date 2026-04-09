@@ -14,9 +14,6 @@ export default function Kubernetes() {
       </div>
       <InfoCard items={[
         { label: 'Тип развёртывания', value: 'Кластер на виртуальных машинах' },
-        { label: 'ОС', value: 'Ubuntu 24.04' },
-        { label: 'Версия Kubernetes', value: '1.30.4' },
-        { label: 'Версия kubectl', value: '1.35.0' },
       ]} />
     </Section>
   );

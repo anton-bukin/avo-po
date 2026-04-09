@@ -15,9 +15,6 @@ export default function Redis() {
       </div>
       <InfoCard items={[
         { label: 'Тип развёртывания', value: 'Кластер на виртуальных машинах в облаке' },
-        { label: 'ОС', value: 'Ubuntu 22.04' },
-        { label: 'Версия redis-server', value: '6:8.2.2-1rl1~jammy1' },
-        { label: 'Версия redis-sentinel', value: '6:8.2.2-1rl1~jammy1' },
       ]} />
     </Section>
   );

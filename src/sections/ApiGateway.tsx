@@ -12,8 +12,7 @@ export default function ApiGateway() {
         </p>
       </div>
       <InfoCard items={[
-        { label: 'ОС', value: 'Ubuntu 22.04' },
-        { label: 'Версия OpenResty', value: '1.21.4.1-1~focal1' },
+        { label: 'Технология', value: 'OpenResty (nginx + Lua)' },
       ]} />
     </Section>
   );

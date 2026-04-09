@@ -17,8 +17,6 @@ export default function Elasticsearch() {
       </div>
       <InfoCard items={[
         { label: 'Тип развёртывания', value: 'Кластер на виртуальных машинах в облаке' },
-        { label: 'ОС', value: 'Ubuntu 22.04' },
-        { label: 'Версия Elasticsearch', value: '7.17.28' },
       ]} />
     </Section>
   );
